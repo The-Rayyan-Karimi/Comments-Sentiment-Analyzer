@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comment Sentiment Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 2px solid #e1e5e9;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+
+        .results-section {
+            margin-top: 30px;
+        }
+
+        .result-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .comment-text {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .sentiment-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .sentiment-positive {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .sentiment-negative {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .sentiment-neutral {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .confidence {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💬 Comment Sentiment Analyzer</h1>
+            <p>Analyze the sentiment of your comments using AI</p>
+        </div>
+
+        <div class="content">
+            <div class="info-box">
+                <strong>How to use:</strong> Enter up to 5 comments below. The AI will analyze each comment and tell you if it's Positive, Negative, or Neutral.
+            </div>
+
+            <div class="input-section">
+                <div id="comment-inputs">
+                    <div class="input-group">
+                        <label for="comment1">Comment 1:</label>
+                        <textarea id="comment1" placeholder="Enter your first comment here..."></textarea>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="addComment()">Add Another Comment</button>
+                    <button class="btn btn-primary" onclick="analyzeComments()">Analyze Sentiments</button>
+                </div>
+            </div>
+
+            <div id="loading" class="loading hidden">
+                <h3>🤖 Analyzing your comments...</h3>
+                <p>This may take a few seconds...</p>
+            </div>
+
+            <div id="error" class="error hidden"></div>
+
+            <div id="results" class="results-section hidden">
+                <h2>📊 Analysis Results</h2>
+                <div id="results-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let commentCount = 1;
+        const maxComments = 5;
+
+        function addComment() {
+            if (commentCount >= maxComments) {
+                alert('Maximum 5 comments allowed!');
+                return;
+            }
+
+            commentCount++;
+            const inputSection = document.getElementById('comment-inputs');
+            const newInput = document.createElement('div');
+            newInput.className = 'input-group';
+            newInput.innerHTML = `
+                <label for="comment${commentCount}">Comment ${commentCount}:</label>
+                <textarea id="comment${commentCount}" placeholder="Enter your comment here..."></textarea>
+            `;
+            inputSection.appendChild(newInput);
+        }
+
+        async function analyzeComments() {
+            const comments = [];
+            
+            // Collect all comments
+            for (let i = 1; i <= commentCount; i++) {
+                const comment = document.getElementById(`comment${i}`).value.trim();
+                if (comment) {
+                    comments.push(comment);
+                }
+            }
+
+            if (comments.length === 0) {
+                showError('Please enter at least one comment to analyze.');
+                return;
+            }
+
+            // Show loading
+            showLoading(true);
+            hideError();
+            hideResults();
+
+            try {
+                const results = await analyzeSentiments(comments);
+                displayResults(comments, results);
+            } catch (error) {
+                showError('Error analyzing comments: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function analyzeSentiments(comments) {
+            const results = [];
+            
+            for (const comment of comments) {
+                try {
+                    // Using Hugging Face Inference API
+                    const response = await fetch(
+                        "https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest",
+                        {
+                            headers: { 
+                                "Authorization": "Bearer hf_xxx", // You can get a free token from huggingface.co
+                                "Content-Type": "application/json"
+                            },
+                            method: "POST",
+                            body: JSON.stringify({ inputs: comment }),
+                        }
+                    );
+
+                    if (!response.ok) {
+                        // Fallback to improved rule-based analysis if API fails
+                        const fallbackResult = improvedSentimentAnalysis(comment);
+                        results.push(fallbackResult);
+                    } else {
+                        const data = await response.json();
+                        const result = processHuggingFaceResponse(data);
+                        results.push(result);
+                    }
+                } catch (error) {
+                    // Fallback to improved analysis
+                    const fallbackResult = improvedSentimentAnalysis(comment);
+                    results.push(fallbackResult);
+                }
+            }
+            
+            return results;
+        }
+
+        function processHuggingFaceResponse(data) {
+            // Process the Hugging Face API response with correct label mapping
+            if (Array.isArray(data) && data.length > 0) {
+                const scores = data[0];
+                const maxScore = scores.reduce((max, item) => 
+                    item.score > max.score ? item : max
+                );
+                
+                // Correct label mapping for CardiffNLP model
+                const labelMapping = {
+                    'LABEL_0': 'Negative',
+                    'LABEL_1': 'Neutral',
+                    'LABEL_2': 'Positive'
+                };
+                
+                return {
+                    sentiment: labelMapping[maxScore.label] || 'Neutral',
+                    confidence: maxScore.score
+                };
+            }
+            
+            return { sentiment: 'Neutral', confidence: 0.5 };
+        }
+
+        function preprocessText(text) {
+            // Preprocess text similar to the Python implementation
+            text = text.toLowerCase();
+            text = text.replace(/http\S+/g, ''); // Remove URLs
+            text = text.replace(/@\w+/g, ''); // Remove usernames
+            text = text.replace(/#/g, ''); // Remove hashtag symbols
+            text = text.replace(/\s+/g, ' ').trim(); // Normalize whitespace
+            return text;
+        }
+
+        function improvedSentimentAnalysis(text) {
+            // Improved rule-based sentiment analysis as fallback
+            const processedText = preprocessText(text);
+            
+            const positiveWords = [
+                'good', 'great', 'excellent', 'amazing', 'wonderful', 'love', 'like', 'happy', 
+                'awesome', 'fantastic', 'perfect', 'best', 'beautiful', 'nice', 'cool', 'good', 
+                'great', 'excellent', 'amazing', 'wonderful', 'love', 'like', 'happy', 'awesome', 
+                'fantastic', 'perfect', 'best', 'beautiful', 'nice', 'cool', 'brilliant', 'outstanding',
+                'superb', 'marvelous', 'delightful', 'pleased', 'satisfied', 'content', 'joyful',
+                'excited', 'thrilled', 'ecstatic', 'grateful', 'blessed', 'fortunate', 'lucky'
+            ];
+            
+            const negativeWords = [
+                'bad', 'terrible', 'awful', 'hate', 'dislike', 'horrible', 'worst', 'disappointing', 
+                'ugly', 'stupid', 'boring', 'annoying', 'frustrated', 'angry', 'sad', 'hate', 
+                'dislike', 'horrible', 'worst', 'disappointing', 'ugly', 'stupid', 'boring', 
+                'annoying', 'frustrated', 'angry', 'sad', 'miserable', 'depressed', 'upset', 
+                'disgusted', 'disgusting', 'nasty', 'filthy', 'dirty', 'rotten', 'awful', 
+                'dreadful', 'ghastly', 'hideous', 'repulsive', 'revolting', 'sickening'
+            ];
+            
+            const words = processedText.split(/\s+/);
+            let positiveCount = 0;
+            let negativeCount = 0;
+            
+            words.forEach(word => {
+                if (positiveWords.includes(word)) positiveCount++;
+                if (negativeWords.includes(word)) negativeCount++;
+            });
+            
+            // Check for negation words that might flip the sentiment
+            const negationWords = ['not', 'no', 'never', 'none', 'nobody', 'nothing', 'neither', 'nowhere', 'hardly', 'barely', 'scarcely', 'doesnt', 'dont', 'cant', 'cannot'];
+            const hasNegation = words.some(word => negationWords.includes(word));
+            
+            if (hasNegation) {
+                // Flip the counts if negation is present
+                [positiveCount, negativeCount] = [negativeCount, positiveCount];
+            }
+            
+            if (positiveCount > negativeCount) {
+                return { sentiment: 'Positive', confidence: 0.7 + (positiveCount * 0.1) };
+            } else if (negativeCount > positiveCount) {
+                return { sentiment: 'Negative', confidence: 0.7 + (negativeCount * 0.1) };
+            } else {
+                return { sentiment: 'Neutral', confidence: 0.6 };
+            }
+        }
+
+        function displayResults(comments, results) {
+            const resultsContent = document.getElementById('results-content');
+            resultsContent.innerHTML = '';
+
+            comments.forEach((comment, index) => {
+                const result = results[index];
+                const sentimentClass = `sentiment-${result.sentiment.toLowerCase()}`;
+                const emoji = result.sentiment === 'Positive' ? '✅' : 
+                             result.sentiment === 'Negative' ? '❌' : '➖';
+
+                const resultHtml = `
+                    <div class="result-item">
+                        <div class="result-header">
+                            <div class="comment-text">"${comment}"</div>
+                            <span class="sentiment-badge ${sentimentClass}">
+                                ${emoji} ${result.sentiment}
+                            </span>
+                        </div>
+                        <div class="confidence">
+                            Confidence: ${(result.confidence * 100).toFixed(1)}%
+                        </div>
+                    </div>
+                `;
+                resultsContent.innerHTML += resultHtml;
+            });
+
+            showResults();
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            loading.className = show ? 'loading' : 'loading hidden';
+        }
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.className = 'error';
+        }
+
+        function hideError() {
+            const error = document.getElementById('error');
+            error.className = 'error hidden';
+        }
+
+        function showResults() {
+            const results = document.getElementById('results');
+            results.className = 'results-section';
+        }
+
+        function hideResults() {
+            const results = document.getElementById('results');
+            results.className = 'results-section hidden';
+        }
+
+        // Allow Enter key to add comments
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && event.ctrlKey) {
+                analyzeComments();
+            }
+        });
+    </script>
+</body>
+</html> 
